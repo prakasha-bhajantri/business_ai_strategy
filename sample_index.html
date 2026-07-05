@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Chatbot Interface</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 400px;
+            max-width: 90%;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: #007bff;
+            color: #ffffff;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Chat Messages Window */
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f9f9f9;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.bot {
+            background: #e9ecef;
+            color: #333333;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+
+        .message.user {
+            background: #007bff;
+            color: #ffffff;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        /* Chat Input Area */
+        .chat-input-area {
+            display: flex;
+            border-top: 1px solid #eeeeee;
+            padding: 10px;
+            background: #ffffff;
+        }
+
+        #user-input {
+            flex: 1;
+            border: 1px solid #cccccc;
+            border-radius: 20px;
+            padding: 10px 15px;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        #user-input:focus {
+            border-color: #007bff;
+        }
+
+        #send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+
+        #send-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">QA Support Bot</div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot">Hello! I am your QA assistant. Ask me anything about our services!</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Type your question here..." autocomplete="off">
+            <button id="send-btn">&#10148;</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. Simple QA Knowledge Base (Keywords mapped to answers)
+        const qaDataset = [
+            { keywords: ["hello", "hi", "hey"], response: "Hello there! How can I help you today?" },
+            { keywords: ["hours", "open", "time"], response: "We are open Monday through Friday, from 9:00 AM to 6:00 PM." },
+            { keywords: ["refund", "return"], response: "You can request a full refund within 30 days of purchase." },
+            { keywords: ["contact", "support", "phone", "email"], response: "You can reach our support team at support@example.com or call 1-800-555-0199." },
+            { keywords: ["price", "cost", "pricing"], response: "Our standard plan starts at $19/month, and the premium plan is $49/month." }
+        ];
+
+        // 2. DOM Elements
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // 3. Helper function to append messages to UI
+        function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            
+            // Auto-scroll to the latest message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 4. Core Bot Logic (Finds answer or gives fallback)
+        function getBotResponse(userText) {
+            const cleanText = userText.toLowerCase();
+            
+            // Search knowledge base for matching keywords
+            for (const item of qaDataset) {
+                if (item.keywords.some(keyword => cleanText.includes(keyword))) {
+                    return item.response;
+                }
+            }
+            
+            // Default fallback response
+            return "I'm sorry, I don't quite understand that question. Could you try rephrasing it, or contact our support team?";
+        }
+
+        // 5. Handling User Submission
+        function handleSendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return; // Ignore empty inputs
+
+            // User message
+            appendMessage(text, 'user');
+            userInput.value = ''; // Clear input
+
+            // Simulating a slight delay for the bot response to feel natural
+            setTimeout(() => {
+                const botReply = getBotResponse(text);
+                appendMessage(botReply, 'bot');
+            }, 500);
+        }
+
+        // 6. Event Listeners
+        sendBtn.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>
