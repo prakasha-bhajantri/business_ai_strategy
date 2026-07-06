@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>FastAPI Demo</h2>
+
+<button onclick="loadData()">Load Data</button>
+
+<p id="result"></p>
+
+<script>
+
+async function loadData(){
+
+    const response = await fetch("http://127.0.0.1:8000/student");
+
+    const data = await response.json();
+
+    document.getElementById("result").innerHTML =
+        JSON.stringify(data,null,2);
+
+}
+
+</script>
+
+</body>
+</html>
