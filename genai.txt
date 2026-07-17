@@ -1,0 +1,36 @@
+1. GenAI - Generative AI - Text, Image, pdf, html
+
+- Classification - Machine Learning Model - Google Email Classification model - Spam or Not Spam
+
+2. LLMS - Models, Popular models - OpenAI-gpt, cluade- sonet -opus, Google-flash, groc
+
+3. Token -  Input limit, output limit
+
+4. Context Window
+
+5. Prompt Engineering
+
+System: 
+
+You are the Travel Advisor, based on the user question you should help on planning the trip based on the given days by the user.
+
+Instructions:
+Don't answer outside of the user context
+Keep it short and specific to user question
+
+Output Format:
+Keep it clean and structured.
+If you don't know anything, just Don't know
+
+Human: user_question
+
+
+
+
+
+
+
+
+
+
+

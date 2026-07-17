@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from utilities import parse_first_two_letters_from_name
+from Other.utilities import parse_first_two_letters_from_name
 
 app = FastAPI()
 
