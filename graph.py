@@ -6,6 +6,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+## FOR API
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import json
+from logger_log import logger
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 #------------- State -----------##
 # Step 1: Define the "Clipboard" (State)
 class RentalPlannerState(TypedDict):
@@ -203,26 +216,66 @@ workflow.add_edge("agreementAnalyzer", END)
 workflow.add_edge("fallback", END)
 
 # Compile it!
-app = workflow.compile()
+rental_app = workflow.compile()
 
 # Step 5: Run it
-if __name__ == "__main__":
-    test_question = {
-        "question": "which agreement i should make for renting an house in tokyo"
+# if __name__ == "__main__":
+#     test_question = {
+#         "question": "which agreement i should make for renting an house in tokyo"
+#     }
+
+#     print("\n Starting the Langgraph")
+#     result = app.invoke(test_question)
+
+#     print("\n--- Final Graph State ---")
+#     print(f"Classifier Chosen : {result.get('classifier')}\n")
+
+#     # Print the specific analysis that was generated
+#     if "location_analysis" in result:
+#         print(f"Location Analysis:\n{result['location_analysis']}")
+#     elif "rental_analysis" in result:
+#         print(f"Rental Analysis:\n{result['rental_analysis']}")
+#     elif "agreement_analysis" in result:
+#         print(f"Agreement Analysis:\n{result['agreement_analysis']}")
+#     elif "fallback" in result:
+#         print(f"Fallback Response:\n{result['fallback']}")
+
+
+# # Compile
+# sports_graph = graph.compile(checkpointer=memory)
+
+
+# API Endpoints
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+
+    return templates.TemplateResponse(
+        request,
+        "chatbot.html",
+        {}
+    )
+
+@app.post("/ask")
+async def ask(message: str = Form(...)):
+
+    logger.info("USER QUESTION ---> %s", message)
+
+    config = {
+        "configurable": {
+            "thread_id": "user_session"
+        }
     }
 
-    print("\n Starting the Langgraph")
-    result = app.invoke(test_question)
+    result = rental_app.invoke(
+        {"question": message},
+        config=config
+    )
 
-    print("\n--- Final Graph State ---")
-    print(f"Classifier Chosen : {result.get('classifier')}\n")
+    reply = (
+        result.get("location_analysis")
+        or result.get("rental_analysis")
+        or result.get("agreement_analysis")
+        or result.get("fallback")
+    )
 
-    # Print the specific analysis that was generated
-    if "location_analysis" in result:
-        print(f"Location Analysis:\n{result['location_analysis']}")
-    elif "rental_analysis" in result:
-        print(f"Rental Analysis:\n{result['rental_analysis']}")
-    elif "agreement_analysis" in result:
-        print(f"Agreement Analysis:\n{result['agreement_analysis']}")
-    elif "fallback" in result:
-        print(f"Fallback Response:\n{result['fallback']}")
+    return {"reply": reply}

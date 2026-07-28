@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<title>Sports AI Assistant</title>
+<link rel="icon" type="image/png" href="/static/sport_log_3.png">
+
+<link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- LEFT CHAT PANEL -->
+
+    <div class="chat-container">
+
+        <div class="chat-header">
+            <img src="/static/sport_log_2.png" class="logo">
+            Housing Rental Planner AI Assistant
+        </div>
+
+        <div class="chat-box" id="chat-box">
+
+            <div class="empty-state" id="empty-state">
+
+                <div class="empty-icon">🏆</div>
+
+                <div class="empty-title">
+                    Ask anything about Housing Rental Planning
+                </div>
+
+                <div class="empty-sub">
+                    Location Analyzer • Rental Pricing Analyzer • Agreement Analyzer
+                </div>
+
+            </div>
+        </div>
+
+        <form class="chat-input" id="chat-form">
+
+            <div class="input-container">
+
+                <input
+                    type="text"
+                    id="message"
+                    placeholder="Message Sports Assistant"
+                    required
+                />
+
+                <button type="button" id="mic-btn" class="icon-btn">🎤</button>
+
+                <button type="submit" id="send-btn" class="send-btn" disabled>
+                    ↑
+                </button>
+
+            </div>
+
+        </form>          
+    </div>
+
+
+    <!-- RIGHT PANEL -->
+
+    <div class="side-panel">
+
+        <div class="panel-section">
+
+            <h3>Quick House Rental Planning Tools</h3>
+
+            <button onclick="askQuick('Which area in Tokyo better for rent 1 LDK house')">
+                Location Analyzer
+            </button>
+
+            <button onclick="askQuick('How much rent is required for tokyo for 1 LDK house?')">
+                Rental Analyzer
+            </button>
+
+            <button onclick="askQuick('What type of rental agreement should I register in Tokyo?')">
+                Agreement Analyzer
+            </button>
+
+        </div>
+
+        <div class="panel-section">
+
+            <h3>Example Questions</h3>
+
+            <ul>
+                <li>Which area in Tokyo better for rent 1 LDK house</li>
+                <li>How much rent is required for tokyo for 1 LDK house?</li>
+                <li>What type of rental agreement should I register in Tokyo?</li>
+            </ul>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const chatBox = document.getElementById("chat-box");
+const form = document.getElementById("chat-form");
+const input = document.getElementById("message");
+const sendBtn = document.getElementById("send-btn");
+const micBtn = document.getElementById("mic-btn");
+
+let isRecording = false;
+
+
+/* SPEECH RECOGNITION SETUP */
+
+const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const recognition = new SpeechRecognition();
+
+recognition.lang = "en-US";
+recognition.continuous = false;
+recognition.interimResults = false;
+
+
+/* MIC BUTTON CLICK */
+
+micBtn.addEventListener("click", () => {
+    recognition.start();
+});
+
+/* RECORDING STARTED */
+
+recognition.onstart = () => {
+
+    micBtn.style.color = "#ff3b30";
+    micBtn.classList.add("recording");
+
+    input.placeholder = "Listening...";
+
+};
+
+
+/* CAPTURE VOICE RESULT */
+
+recognition.onresult = function(event){
+
+    const transcript = event.results[0][0].transcript;
+
+    input.value = transcript;
+
+    sendBtn.disabled = false;
+
+};
+
+
+/* RECORDING ENDED */
+
+recognition.onend = () => {
+
+    micBtn.style.color = "#555";
+    micBtn.classList.remove("recording");
+
+    input.placeholder = "Message Sports Assistant";
+
+    isRecording = false;
+
+};
+
+
+/* ENABLE / DISABLE SEND BUTTON */
+
+input.addEventListener("input", () => {
+
+    if(input.value.trim() === ""){
+        sendBtn.disabled = true;
+    }else{
+        sendBtn.disabled = false;
+    }
+
+});
+
+form.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const empty = document.getElementById("empty-state");
+    if(empty){
+        empty.remove();
+    }
+
+    sendBtn.disabled = true;
+
+    const userMessage = input.value.trim();
+    if (!userMessage) return;
+
+    /* SHOW USER MESSAGE */
+
+    chatBox.innerHTML += `
+        <div class="message user-message">
+            ${userMessage}
+        </div>
+    `;
+
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    /* SHOW TYPING INDICATOR */
+
+    const typing = document.createElement("div");
+    typing.className = "typing";
+    typing.id = "typing-indicator";
+
+    typing.innerHTML = `<span></span><span></span><span></span>`;
+    chatBox.appendChild(typing);
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    /* API CALL */
+
+    const response = await fetch("/ask", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `message=${encodeURIComponent(userMessage)}`
+    });
+
+    const data = await response.json();
+    
+
+    /* REMOVE TYPING INDICATOR */
+
+    const loader = document.getElementById("typing-indicator");
+    if(loader) loader.remove();
+
+    /* SHOW BOT RESPONSE */
+
+    chatBox.innerHTML += `
+        <div class="message bot-message">
+            ${marked.parse(data.reply)}
+        </div>
+    `;
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    sendBtn.disabled = false;
+
+});
+
+
+function askQuick(text){
+
+    input.value = text;
+    form.dispatchEvent(new Event("submit"));
+
+}
+
+</script>
+
+</body>
+</html>
